@@ -1,11 +1,104 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Unblocked Hub</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: white; display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar Navigation */
+        .sidebar { width: 80px; background: #1a1a1a; display: flex; flex-direction: column; align-items: center; padding-top: 20px; border-right: 1px solid #333; }
+        .nav-item { margin-bottom: 30px; cursor: pointer; opacity: 0.6; transition: 0.3s; font-size: 12px; text-align: center; }
+        .nav-item:hover { opacity: 1; color: #00d2ff; }
+        .nav-item.active { opacity: 1; color: #00d2ff; border-left: 3px solid #00d2ff; width: 100%; }
+
+        /* Main Content Area */
+        .main { flex-grow: 1; display: flex; flex-direction: column; }
+        
+        /* Search Bar Area */
+        .header { padding: 15px; background: #111; display: flex; justify-content: center; }
+        .search-box { width: 60%; display: flex; gap: 10px; }
+        input { flex-grow: 1; padding: 10px; border-radius: 5px; border: 1px solid #444; background: #222; color: white; }
+        button { padding: 10px 20px; background: #00d2ff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
+        /* Content Frames */
+        .content-frame { flex-grow: 1; width: 100%; border: none; background: #000; }
+        .hidden { display: none; }
+        
+        /* Emulator Grid */
+        #emulator-view { padding: 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .card { background: #222; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #333; cursor: pointer; }
+        .card:hover { border-color: #00d2ff; background: #2a2a2a; }
+    </style>
 </head>
 <body>
-    <h1>Welcome to the Hub</h1>
-    <p>This page is hosted on GitHub and works on my Chromebook!</p>
-    <a href="https://www.google.com">Sample Link</a>
+
+    <div class="sidebar">
+        <div class="nav-item active" onclick="showTab('search')">🔍<br>Search</div>
+        <div class="nav-item" onclick="showTab('emulator')">🎮<br>Emulator</div>
+        <div class="nav-item" onclick="window.location.href='https://classroom.google.com'">🏫<br>Panic</div>
+    </div>
+
+    <div class="main">
+        <div class="header" id="search-header">
+            <div class="search-box">
+                <input type="text" id="urlInput" placeholder="Enter URL or Search Query...">
+                <button onclick="launchProxy()">Go</button>
+            </div>
+        </div>
+
+        <iframe id="browser-frame" class="content-frame" src="about:blank"></iframe>
+
+        <div id="emulator-view" class="content-frame hidden">
+            <div class="card" onclick="launchEmulator('https://now.gg/apps/roblox/2310/roblox.html')">
+                <h3>Now.gg Roblox</h3>
+                <p>Run via Browser</p>
+            </div>
+            <div class="card" onclick="launchEmulator('https://google.com/search?q=play+store+web')">
+                <h3>Play Store Web</h3>
+                <p>Browse Apps</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tab) {
+            const browser = document.getElementById('browser-frame');
+            const emulator = document.getElementById('emulator-view');
+            const header = document.getElementById('search-header');
+            
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+
+            if (tab === 'search') {
+                browser.classList.remove('hidden');
+                emulator.classList.add('hidden');
+                header.classList.remove('hidden');
+            } else {
+                browser.classList.add('hidden');
+                emulator.classList.remove('hidden');
+                header.classList.add('hidden');
+            }
+        }
+
+        function launchProxy() {
+            const input = document.getElementById('urlInput').value;
+            const frame = document.getElementById('browser-frame');
+            
+            // Basic logic: if it doesn't start with http, search it on Bing/Google
+            let url = input;
+            if (!input.startsWith('http')) {
+                url = 'https://www.bing.com/search?q=' + encodeURIComponent(input);
+            }
+            frame.src = url;
+        }
+
+        function launchEmulator(url) {
+            const frame = document.getElementById('browser-frame');
+            showTab('search');
+            frame.src = url;
+        }
+    </script>
 </body>
 </html>
