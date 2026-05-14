@@ -6,46 +6,60 @@
     <title>Dashboard</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: white; display: flex; height: 100vh; overflow: hidden; }
+        body { font-family: sans-serif; background: #0f0f0f; color: white; display: flex; height: 100vh; overflow: hidden; }
 
-        /* Sidebar Navigation */
-        .sidebar { width: 80px; background: #1a1a1a; display: flex; flex-direction: column; align-items: center; padding-top: 20px; border-right: 1px solid #333; }
-        .nav-item { margin-bottom: 30px; cursor: pointer; opacity: 0.6; transition: 0.3s; font-size: 12px; text-align: center; }
+        .sidebar { width: 80px; background: #1a1a1a; display: flex; flex-direction: column; align-items: center; padding-top: 20px; border-right: 1px solid #333; z-index: 10; }
+        .nav-item { margin-bottom: 30px; cursor: pointer; opacity: 0.6; transition: 0.3s; font-size: 11px; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
         .nav-item:hover { opacity: 1; color: #00d2ff; }
         .nav-item.active { opacity: 1; color: #00d2ff; border-left: 3px solid #00d2ff; width: 100%; }
 
-        /* Main Content Area */
-        .main { flex-grow: 1; display: flex; flex-direction: column; }
-        
-        /* Search Bar Area */
-        .header { padding: 15px; background: #111; display: flex; justify-content: center; }
+        .main { flex-grow: 1; display: flex; flex-direction: column; position: relative; }
+        .header { padding: 15px; background: #111; display: flex; justify-content: center; border-bottom: 1px solid #333; }
         .search-box { width: 60%; display: flex; gap: 10px; }
-        input { flex-grow: 1; padding: 10px; border-radius: 5px; border: 1px solid #444; background: #222; color: white; }
-        button { padding: 10px 20px; background: #00d2ff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        input { flex-grow: 1; padding: 10px; border-radius: 5px; border: 1px solid #444; background: #222; color: white; outline: none; }
+        input:focus { border-color: #00d2ff; }
+        button.go-btn { padding: 10px 20px; background: #00d2ff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: #000; }
 
-        /* Content Frames */
         .content-frame { flex-grow: 1; width: 100%; border: none; background: #000; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         
-        /* Emulator Grid */
-        #emulator-view { padding: 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-        .card { background: #222; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #333; cursor: pointer; }
-        .card:hover { border-color: #00d2ff; background: #2a2a2a; }
+        #emulator-view { padding: 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; overflow-y: auto; }
+        .card { background: #222; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #333; cursor: pointer; transition: 0.2s; }
+        .card:hover { border-color: #00d2ff; background: #2a2a2a; transform: translateY(-3px); }
+
+        #welcome-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.98); display: flex; justify-content: center; align-items: center; z-index: 10000; }
+        .modal-content { background: #1a1a1a; padding: 40px; border-radius: 8px; border: 1px solid #333; text-align: center; max-width: 450px; }
+        .modal-content h2 { margin-bottom: 15px; font-size: 18px; color: #00d2ff; }
+        .modal-content p { margin-bottom: 10px; font-size: 14px; color: #bbb; }
+        .key { color: #ff4b4b; background: #333; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+        #timer { font-size: 32px; margin: 20px 0; color: #00d2ff; }
+        #close-modal { padding: 12px 30px; background: #333; color: #666; border: none; border-radius: 4px; cursor: not-allowed; font-weight: bold; }
+        #close-modal.ready { background: #00d2ff; color: #000; cursor: pointer; }
     </style>
 </head>
 <body>
 
+    <div id="welcome-modal">
+        <div class="modal-content">
+            <h2>BOOT CONFIGURATION</h2>
+            <p>Panic keybind enabled: <span class="key">`</span></p>
+            <p>Redirect target: Google Classroom</p>
+            <div id="timer">3</div>
+            <button id="close-modal" disabled onclick="closeModal()">LOCKED</button>
+        </div>
+    </div>
+
     <div class="sidebar">
-        <div class="nav-item active" onclick="showTab('search')">🔍<br>Search</div>
-        <div class="nav-item" onclick="showTab('emulator')">🎮<br>Emulator</div>
-        <div class="nav-item" onclick="window.location.href='https://classroom.google.com'">🏫<br>Panic</div>
+        <div class="nav-item active" id="nav-search" onclick="showTab('search')">WEB</div>
+        <div class="nav-item" id="nav-emu" onclick="showTab('emulator')">APPS</div>
+        <div class="nav-item" onclick="panic()">EXIT</div>
     </div>
 
     <div class="main">
         <div class="header" id="search-header">
             <div class="search-box">
-                <input type="text" id="urlInput" placeholder="Enter URL or Search Query...">
-                <button onclick="launchProxy()">Go</button>
+                <input type="text" id="urlInput" placeholder="URL or Search Query..." onkeydown="if(event.key==='Enter') launchProxy()">
+                <button class="go-btn" onclick="launchProxy()">EXECUTE</button>
             </div>
         </div>
 
@@ -53,17 +67,38 @@
 
         <div id="emulator-view" class="content-frame hidden">
             <div class="card" onclick="launchEmulator('https://now.gg/apps/roblox/2310/roblox.html')">
-                <h3>Now.gg Roblox</h3>
-                <p>Run via Browser</p>
+                <h3>Cloud Player</h3>
+                <p>Instance 1</p>
             </div>
-            <div class="card" onclick="launchEmulator('https://google.com/search?q=play+store+web')">
-                <h3>Play Store Web</h3>
-                <p>Browse Apps</p>
+            <div class="card" onclick="launchEmulator('https://www.google.com/search?q=play+store')">
+                <h3>Play Store</h3>
+                <p>Web Interface</p>
             </div>
         </div>
     </div>
 
     <script>
+        let timeLeft = 3;
+        const timerDisplay = document.getElementById('timer');
+        const closeBtn = document.getElementById('close-modal');
+
+        const countdown = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                timerDisplay.innerText = timeLeft;
+            } else {
+                clearInterval(countdown);
+                timerDisplay.style.display = 'none';
+                closeBtn.innerText = "CONFIRM";
+                closeBtn.disabled = false;
+                closeBtn.classList.add('ready');
+            }
+        }, 1000);
+
+        function closeModal() {
+            document.getElementById('welcome-modal').style.display = 'none';
+        }
+
         function showTab(tab) {
             const browser = document.getElementById('browser-frame');
             const emulator = document.getElementById('emulator-view');
@@ -72,10 +107,12 @@
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
 
             if (tab === 'search') {
+                document.getElementById('nav-search').classList.add('active');
                 browser.classList.remove('hidden');
                 emulator.classList.add('hidden');
                 header.classList.remove('hidden');
             } else {
+                document.getElementById('nav-emu').classList.add('active');
                 browser.classList.add('hidden');
                 emulator.classList.remove('hidden');
                 header.classList.add('hidden');
@@ -85,20 +122,32 @@
         function launchProxy() {
             const input = document.getElementById('urlInput').value;
             const frame = document.getElementById('browser-frame');
-            
-            // Basic logic: if it doesn't start with http, search it on Bing/Google
+            if (!input) return;
+
             let url = input;
-            if (!input.startsWith('http')) {
+            if (!input.includes('.') || input.includes(' ')) {
                 url = 'https://www.bing.com/search?q=' + encodeURIComponent(input);
+            } else if (!input.startsWith('http')) {
+                url = 'https://' + input;
             }
+            
             frame.src = url;
+            showTab('search');
         }
 
         function launchEmulator(url) {
             const frame = document.getElementById('browser-frame');
-            showTab('search');
             frame.src = url;
+            showTab('search');
         }
+
+        function panic() {
+            window.location.href = 'https://classroom.google.com';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '`') panic();
+        });
     </script>
 </body>
 </html>
